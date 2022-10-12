@@ -26,7 +26,7 @@ public class RatingResource {
                 new Rating("99",4),
                 new Rating("100",5)
         );
-        UserRating userRating = new UserRating(ratings);
+        UserRating userRating = new UserRating(ratings,userId);
         return userRating;
     }
 }

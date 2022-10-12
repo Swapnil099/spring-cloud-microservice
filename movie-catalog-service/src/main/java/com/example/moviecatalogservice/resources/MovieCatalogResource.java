@@ -4,6 +4,9 @@ import com.example.moviecatalogservice.models.CatalogItem;
 import com.example.moviecatalogservice.models.Movie;
 import com.example.moviecatalogservice.models.Rating;
 import com.example.moviecatalogservice.models.UserRating;
+import com.example.moviecatalogservice.services.MovieInfo;
+import com.example.moviecatalogservice.services.UserRatingInfo;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,17 +27,25 @@ public class MovieCatalogResource {
     @Autowired
     RestTemplate restTemplate;
 
+//    @Autowired
+//    WebClient.Builer webClientBuilder;
+
+    @Autowired
+    MovieInfo movieInfo;
+
+    @Autowired
+    UserRatingInfo userRatingInfo;
+
     @RequestMapping("/{userId}")
     public List<CatalogItem> getCatalog(@PathVariable("userId") String userId){
-        System.out.println("its here");
-        UserRating userRating = restTemplate.getForObject("http://movie-rating-service/ratingsdata/user/"+userId, UserRating.class);
+        UserRating userRating = userRatingInfo.getUserRating(userId);
 
-        return userRating.getRatings().stream().map(rating -> {
-            Movie movie = restTemplate.getForObject("http://movie-info-service/movies/"+rating.getMovieId(),Movie.class);
-            return new CatalogItem(movie.getName(),"Desc",rating.getRating());
-        }).collect(Collectors.toList());
-
+        return userRating.getRatings().stream().map(rating ->
+                        movieInfo.getCatalogItem(rating)
+                ).collect(Collectors.toList());
     }
+
+
 }
 
 // Async request calls to APIs using webflux dependecies
